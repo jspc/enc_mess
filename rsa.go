@@ -8,7 +8,6 @@ import (
     "encoding/pem"
     "io/ioutil"
     "log"
-
 )
 
 var block *pem.Block
@@ -29,12 +28,19 @@ func configurePublicKey() {
 
     block, _ = pem.Decode(pemData)
     if block == nil {
-        panic("failed to parse PEM block containing the public key")
+        log.Fatalf("failed to parse PEM block containing the public key")
     }
 
-    publicKey, err = x509.ParsePKIXPublicKey(block.Bytes)
+    pub, err := x509.ParsePKIXPublicKey(block.Bytes)
     if err != nil {
-        panic("failed to parse DER encoded public key: " + err.Error())
+        log.Fatalf("failed to parse DER encoded public key: " + err.Error())
+    }
+
+    switch pub := pub.(type) {
+    case *rsa.PublicKey:
+        publicKey = pub
+    default:
+        log.Fatalf("unknown type of public key")
     }
 }
 

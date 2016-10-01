@@ -23,6 +23,7 @@ func init() {
 }
 
 func main() {
+    ConfigureRSA()
     plaintext := []byte("Plain text message to be encrypted")
 
     encrypted := encrypt(plaintext)
