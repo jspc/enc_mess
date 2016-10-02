@@ -4,25 +4,26 @@ import (
     "flag"
     "fmt"
     "log"
+    "net/http"
     "time"
 
     "github.com/boltdb/bolt"
+    "github.com/gorilla/context"
     "golang.org/x/crypto/ssh/terminal"
 )
 
 var password []byte
-var privateKeyPath string
-var publicKeyPath string
-var boltPath string
 var amqpUri string
+var myName string
+var privateKeyPath string
 
 var storage Storage
 
 func init() {
-    flag.StringVar(&privateKeyPath, "private-key", "./key.pem", "RSA Secret key PEM file")
-    flag.StringVar(&publicKeyPath, "public-key", "./key.pub", "RSA Public key PEM file")
-    flag.StringVar(&storage.Path, "db-file", "./keys.db", "DB file, storing public keys. Will be created if it doesn't exist")
     flag.StringVar(&amqpUri, "amqp", "amqp://guest:guest@localhost:5671/", "URI to pass messages via")
+    flag.StringVar(&myName, "sender-name", "jspc", "Simple cosmetic placeholder for sender's name")
+    flag.StringVar(&privateKeyPath, "private-key", "./key.pem", "RSA Secret key PEM file")
+    flag.StringVar(&storage.Path, "db-file", "./keys.db", "DB file, storing public keys. Will be created if it doesn't exist")
 
     flag.Parse()
 
@@ -45,5 +46,10 @@ func main() {
     defer storage.db.Close()
     storage.Preflight()
 
-    return
+    log.Println("Starting RESTful API")
+
+    http.HandleFunc("/", Router)
+    http.ListenAndServe(":8080", context.ClearHandler(http.DefaultServeMux))
+
+//    return
 }
