@@ -14,17 +14,13 @@ var block *pem.Block
 var err error
 var pemData,label []byte
 var privateKey *rsa.PrivateKey
-var publicKey *rsa.PublicKey
 
 func ConfigureRSA() {
     configurePrivateKey()
-    configurePublicKey()
 }
 
-func configurePublicKey() {
-    if pemData, err = ioutil.ReadFile(publicKeyPath); err != nil {
-        log.Fatalf("Error reading pem file: %s", err)
-    }
+func LoadPublicKey(id string) (publicKey *rsa.PublicKey){
+    pemData = storage.GetKey(id)
 
     block, _ = pem.Decode(pemData)
     if block == nil {
@@ -42,6 +38,8 @@ func configurePublicKey() {
     default:
         log.Fatalf("unknown type of public key")
     }
+
+    return
 }
 
 func configurePrivateKey() {
@@ -58,10 +56,9 @@ func configurePrivateKey() {
     if privateKey, err = x509.ParsePKCS1PrivateKey(s); err != nil {
         log.Fatalf("Private key can't be decoded: %s", err)
     }
-
 }
 
-func encrypt(plaintext []byte) (encrypted []byte) {
+func encrypt(plaintext []byte, publicKey *rsa.PublicKey) (encrypted []byte) {
     md5Hash := md5.New()
 
     if encrypted, err = rsa.EncryptOAEP(md5Hash, rand.Reader, publicKey, plaintext, label); err != nil {
