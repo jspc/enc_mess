@@ -13,9 +13,12 @@ type Consumer struct {
     done    chan error
 }
 
-func AMQPConsumer(uri, key, ctag string, conversation *Conversation) (*Consumer, error) {
+func AMQPConsumer(uri  string, conversation *Conversation) (*Consumer, error) {
     exchangeName := "encrypted-messaging.exchange"
     queueName := "encrypted-messaging.incoming"
+
+    ctag := conversation.Sender
+    key := conversation.Recipient
 
     c := &Consumer{
         conn:    nil,
@@ -124,9 +127,7 @@ func handle(deliveries <-chan amqp.Delivery, c *Conversation,done chan error) {
 }
 
 func AMQPPublisher(amqpUri, key, body string) error {
-    log.Println("go")
     exchangeName := "encrypted-messaging.exchange"
-//    queueName := "encrypted-messaging.incoming"
 
     connection, err := amqp.Dial(amqpUri)
     if err != nil {
